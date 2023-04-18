@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -Wall -lm
 LDFLAGS =
 OBJFILES = $(patsubst %.c,%.o,$(wildcard *.c))
 TARGET = serial_main

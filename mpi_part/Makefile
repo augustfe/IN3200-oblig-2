@@ -1,5 +1,5 @@
 CC = mpicc
-CFLAGS = -Wall
+CFLAGS = -Wall -lm
 LDFLAGS =
 OBJFILES = $(addprefix ../serial_part/,allocate_2D_array.o compute_numerical_error.o deallocate_2D_array.o) $(patsubst %.c,%.o,$(wildcard *.c))
 TARGET = mpi_main.exe
