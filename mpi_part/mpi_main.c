@@ -1,28 +1,30 @@
-#include <mpi.h>
+#include "../serial_part/functions.h"
+#include "mpi_functions.h"
 #include <math.h>
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "mpi_functions.h"
-#include "../serial_part/functions.h"
 #define Pi M_PI
 
-int main(int nargs, char** args) {
-    int nx = 1001, ny = 1001; double T = 2.0; // default values
+int main(int nargs, char **args)
+{
+    int nx = 1001, ny = 1001;
+    double T = 2.0; // default values
     int i, j;
     double dx, dy, dt, t;
-    double** my_u, ** my_u_new, ** my_u_prev, ** my_tmp_ptr;
+    double **my_u, **my_u_new, **my_u_prev, **my_tmp_ptr;
     int my_rank, my_offset, P, has_neigh_below, has_neigh_above, my_ny;
     MPI_Init(&nargs, &args);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &P);
-    if (my_rank == 0) {
+    if (my_rank == 0)
+    {
         if (nargs > 1) // if a new value of nx is provided on the command line
             nx = ny = atoi(args[1]);
         if (nargs > 2) // if a new value of T is provided on the command line
             T = atof(args[2]);
     }
     // let process 0 broadcast values of nx, ny and T to all other processes
-    // ....
     MPI_Bcast(&ny, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&nx, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&T, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -34,7 +36,8 @@ int main(int nargs, char** args) {
     allocate_2D_array(&my_u, nx, (my_ny + has_neigh_below + has_neigh_above));
     allocate_2D_array(&my_u_new, nx, (my_ny + has_neigh_below + has_neigh_above));
     allocate_2D_array(&my_u_prev, nx, (my_ny + has_neigh_below + has_neigh_above));
-    dx = 1.0 / (nx - 1); dy = 1.0 / (ny - 1);
+    dx = 1.0 / (nx - 1);
+    dy = 1.0 / (ny - 1);
     dt = 2.0 * dx; // maximum value allowed for the time step size
     double t1, t2;
     // start timing
@@ -42,9 +45,11 @@ int main(int nargs, char** args) {
 
     // set initial condition
     double y_val;
-    for (i = 0; i < my_ny; i++) {
+    for (i = 0; i < my_ny; i++)
+    {
         y_val = (i + my_offset) * dy * Pi * 2.0;
-        for (j = 0; j < nx; j++) {
+        for (j = 0; j < nx; j++)
+        {
             my_u_prev[i + has_neigh_below][j] = cos(2.0 * Pi * j * dx) * cos(y_val);
         }
     }
@@ -53,7 +58,8 @@ int main(int nargs, char** args) {
     subg_first_time_step(my_rank, P, nx, my_ny, dx, dy, dt, my_u, my_u_prev);
     // compute the remaining time steps
     t = dt;
-    while (t < T) {
+    while (t < T)
+    {
         t += dt;
         communicate_above_below(my_rank, P, nx, my_ny, my_u);
         subg_one_fast_time_step(my_rank, P, nx, my_ny, dx, dy, dt, my_u_new, my_u, my_u_prev);
@@ -64,15 +70,14 @@ int main(int nargs, char** args) {
         my_u_new = my_tmp_ptr;
     }
     printf("my_rank=%d, nx=%d, my_ny=%d, T=%g, dt=%g, error=%e\n", my_rank, nx, my_ny, t, dt,
-        all_compute_numerical_error(my_rank, my_offset, P, nx, my_ny, dx, dy, t, my_u));
+           all_compute_numerical_error(my_rank, my_offset, P, nx, my_ny, dx, dy, t, my_u));
 
     // stop timing
     t2 = MPI_Wtime();
 
     printf("my_rank=%d used %fs\n", my_rank, t2 - t1);
-    // deallocate arrays my_u_new, my_u, my_u_prev
-    // ....
 
+    // deallocate arrays my_u_new, my_u, my_u_prev
     deallocate_2D_array(my_u_new);
     deallocate_2D_array(my_u);
     deallocate_2D_array(my_u_prev);

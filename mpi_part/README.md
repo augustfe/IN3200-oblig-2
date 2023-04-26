@@ -1,0 +1,2 @@
+# Parallell implementation
+The parallell implementation is done through a `Makefile` with the command `make`. For some reason I was only able to reliably run the program on my Mac with 4 processes. This is presumably because the CPU consists of two different kinds of Cores (4 Efficiency cores and 4 Performance cores). I therefore took the oportunity to learn how to use the Fox system. My personal notes about how to use the system can be found in `FoxNotes.md`. The results from this be found in `slurm-200315.txt`.
